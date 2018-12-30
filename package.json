@@ -1,0 +1,20 @@
+{
+  "name": "direct-chat-server",
+  "version": "1.0.0",
+  "description": "hapi server for direct-chat",
+  "repository": "https://github.com/lindenquan/direct-chat-server",
+  "author": "Linden Quan",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "start": "node ./src/server",
+    "dev": "nodemon --inspect ./src/server"
+  },
+  "dependencies": {
+    "hapi": "^17.8.1",
+    "eslint": "^4.0.0",
+    "eslint-plugin-prettier": "^2.0.0",
+    "prettier-eslint": "^8.0.0",
+    "nodemon": "^1.0.0"
+  }
+}
