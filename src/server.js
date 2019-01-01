@@ -29,6 +29,12 @@ server.route({
     if (method == 'fetchRecentChatContact') {
       return service.fetchRecentChatContact();
     }
+    if (method == 'fetchNotifications') {
+      return service.fetchNotifications();
+    }
+    if (method == 'fetchMyContact') {
+      return service.fetchMyContact();
+    }
     return `Unkown method:${method}`;
   },
 });
