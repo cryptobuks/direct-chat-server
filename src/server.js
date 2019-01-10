@@ -33,7 +33,7 @@ server.route({
       return service.fetchNotifications();
     }
     if (method == 'fetchMyContact') {
-      return service.fetchMyContact();
+      return service.fetchMyContact(request.query);
     }
     return `Unkown method:${method}`;
   },
