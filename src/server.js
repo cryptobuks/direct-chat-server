@@ -16,33 +16,28 @@ const server = Hapi.server({
   },
 });
 
-// Add the route
-server.route({
-  method: 'GET',
-  path: '/api/{method}',
-  handler: function(request, h) {
-    const method = encodeURIComponent(request.params.method);
-    console.log('GET:' + method);
-    if (method === 'fetchAllContact') {
-      return service.fetchAllContact();
-    }
-    if (method == 'fetchRecentChatContact') {
-      return service.fetchRecentChatContact();
-    }
-    if (method == 'fetchNotifications') {
-      return service.fetchNotifications();
-    }
-    if (method == 'fetchMyContact') {
-      return service.fetchMyContact(request.query);
-    }
-    return `Unkown method:${method}`;
-  },
-});
+const validate = async function(decoded, request) {
+  return { isValid: true, };
+};
 
 // Start the server
 const start = async function() {
   try {
     await server.register(Inert);
+
+    server.route({
+      method: 'POST',
+      path: '/api/{method}',
+      handler: function(request, h) {
+        const method = encodeURIComponent(request.params.method);
+        console.log('POST:' + method);
+        if (method === 'createNewUser') {
+          return service.createNewUser(request.payload);
+        }
+        return `Unkown method:${method}`;
+      },
+    });
+
     server.route({
       method: 'GET',
       path: '/assets/{file*}',
@@ -53,6 +48,29 @@ const start = async function() {
         },
       },
     });
+
+    server.route({
+      method: 'GET',
+      path: '/api/{method}',
+      handler: function(request, h) {
+        const method = encodeURIComponent(request.params.method);
+        console.log('GET:' + method);
+        if (method === 'fetchAllContact') {
+          return service.fetchAllContact();
+        }
+        if (method == 'fetchRecentChatContact') {
+          return service.fetchRecentChatContact();
+        }
+        if (method == 'fetchNotifications') {
+          return service.fetchNotifications();
+        }
+        if (method == 'fetchMyContact') {
+          return service.fetchMyContact(request.query);
+        }
+        return `Unkown method:${method}`;
+      },
+    });
+
     await server.start();
   } catch (err) {
     console.log(err);

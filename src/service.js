@@ -4,6 +4,7 @@ class Service {
   constructor() {
     this.botAvatar = '/assets/img/bot.gif';
     this.defaultAvatar = '/assets/img/default-avatar.svg';
+    this.allUsers = this.getAllUsers();
   }
 
   sleep(seconds = 1) {
@@ -11,26 +12,7 @@ class Service {
     while (waitTill > new Date()) {}
   }
 
-  fetchMyContact(params) {
-    //this.sleep(0.1);
-    const email = params.email;
-    console.log(email);
-    return {};
-    // return new Contact(
-    //   'Linden.quan@gmail.com',
-    //   'Linden Quan',
-    //   'online',
-    //   this.defaultAvatar
-    // );
-  }
-
-  fetchAllContact() {
-    this.sleep(0.1);
-    return this.fetchRecentChatContact();
-  }
-
-  fetchRecentChatContact() {
-    //    this.sleep(0.1);
+  getAllUsers() {
     return [
       new Contact('AI-Bot@directChat.com', 'AI-Bot', 'online', this.botAvatar),
       new Contact(
@@ -52,6 +34,38 @@ class Service {
         'https://www.kasandbox.org/programming-images/avatars/leafers-ultimate.png'
       ),
     ];
+  }
+
+  createNewUser(user) {
+    this.allUsers.push(user);
+    return 201;
+  }
+
+  fetchMyContact(params) {
+    //this.sleep(0.1);
+    const email = params.email.toLowerCase();
+    const myContact = this.allUsers.find(contact => {
+      return contact.email.toLowerCase() === email;
+    });
+
+    if (myContact === undefined) {
+      console.log('not found');
+      return {};
+    }
+    console.log('found');
+    return myContact;
+  }
+
+  fetchAllContact() {
+    this.sleep(0.1);
+    return this.fetchRecentChatContact();
+  }
+
+  fetchRecentChatContact() {
+    //    this.sleep(0.1);
+    return this.allUsers.filter(user => {
+      return !user.email.includes('linden');
+    });
   }
 
   fetchNotifications() {
