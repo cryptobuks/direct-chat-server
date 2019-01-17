@@ -1,3 +1,4 @@
+const auth = require('./auth');
 const Contact = require('./model/Contact');
 
 class Service {
@@ -10,6 +11,12 @@ class Service {
   sleep(seconds = 1) {
     let waitTill = new Date(new Date().getTime() + seconds * 1000);
     while (waitTill > new Date()) {}
+  }
+
+  auth(token) {
+    const text = auth.decrypt(token);
+    console.log(`decrypted:${text}`);
+    return true;
   }
 
   getAllUsers() {
@@ -38,7 +45,6 @@ class Service {
 
   createNewUser(user) {
     this.allUsers.push(user);
-    return 201;
   }
 
   fetchMyContact(params) {

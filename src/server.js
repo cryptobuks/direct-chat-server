@@ -26,19 +26,6 @@ const start = async function() {
     await server.register(Inert);
 
     server.route({
-      method: 'POST',
-      path: '/api/{method}',
-      handler: function(request, h) {
-        const method = encodeURIComponent(request.params.method);
-        console.log('POST:' + method);
-        if (method === 'createNewUser') {
-          return service.createNewUser(request.payload);
-        }
-        return `Unkown method:${method}`;
-      },
-    });
-
-    server.route({
       method: 'GET',
       path: '/assets/{file*}',
       handler: {
@@ -50,24 +37,43 @@ const start = async function() {
     });
 
     server.route({
-      method: 'GET',
+      method: 'POST',
       path: '/api/{method}',
       handler: function(request, h) {
+        const authorized = service.auth(request.payload.token);
+        if (authorized === false) {
+          return h.code(401);
+        }
+
         const method = encodeURIComponent(request.params.method);
-        console.log('GET:' + method);
-        if (method === 'fetchAllContact') {
-          return service.fetchAllContact();
+        console.log('POST:' + method);
+
+        let data = null;
+        let code = 200;
+        switch (method) {
+          case 'fetchAllContact':
+            data = service.fetchAllContact();
+            break;
+          case 'fetchRecentChatContact':
+            data = service.fetchRecentChatContact();
+            break;
+          case 'fetchNotifications':
+            data = service.fetchNotifications();
+            break;
+          case 'fetchMyContact':
+            data = service.fetchMyContact(request.query);
+            break;
+          case 'createNewUser':
+            try {
+              service.createNewUser(request.payload);
+            } catch (error) {
+              console.error(error);
+              code = 500;
+            }
+            break;
         }
-        if (method == 'fetchRecentChatContact') {
-          return service.fetchRecentChatContact();
-        }
-        if (method == 'fetchNotifications') {
-          return service.fetchNotifications();
-        }
-        if (method == 'fetchMyContact') {
-          return service.fetchMyContact(request.query);
-        }
-        return `Unkown method:${method}`;
+
+        return h.response(data).code(code);
       },
     });
 
