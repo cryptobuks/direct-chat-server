@@ -3,6 +3,7 @@
 const Hapi = require('hapi');
 const service = require('./service');
 const Inert = require('inert');
+const test = require('./test');
 
 // Create a server with a host and port
 const server = Hapi.server({
@@ -15,10 +16,6 @@ const server = Hapi.server({
     },
   },
 });
-
-const validate = async function(decoded, request) {
-  return { isValid: true, };
-};
 
 // Start the server
 const start = async function() {
@@ -40,9 +37,9 @@ const start = async function() {
       method: 'POST',
       path: '/api/{method}',
       handler: function(request, h) {
-        const authorized = service.auth(request.payload.token);
-        if (authorized === false) {
-          return h.code(401);
+        const email = service.auth(request.payload.token);
+        if (!email) {
+          return h.response().code(401);
         }
 
         const method = encodeURIComponent(request.params.method);
@@ -61,11 +58,11 @@ const start = async function() {
             data = service.fetchNotifications();
             break;
           case 'fetchMyContact':
-            data = service.fetchMyContact(request.query);
+            data = service.fetchMyContact(email);
             break;
           case 'createNewUser':
             try {
-              service.createNewUser(request.payload);
+              [data, code,] = service.createNewUser(request.payload);
             } catch (error) {
               console.error(error);
               code = 500;

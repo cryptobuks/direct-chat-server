@@ -14,9 +14,8 @@ class Service {
   }
 
   auth(token) {
-    const text = auth.decrypt(token);
-    console.log(`decrypted:${text}`);
-    return true;
+    const email = auth.decrypt(token);
+    return email;
   }
 
   getAllUsers() {
@@ -44,17 +43,22 @@ class Service {
   }
 
   createNewUser(user) {
-    this.allUsers.push(user);
+    if (user.email && user.name && user.image) {
+      const contact = new Contact(user.email, user.name, 'online', user.image);
+      this.allUsers.push(contact);
+      console.log(this.allUsers);
+      return [undefined, 201,];
+    }
+
+    return [undefined, 400,];
   }
 
-  fetchMyContact(params) {
-    //this.sleep(0.1);
-    const email = params.email.toLowerCase();
+  fetchMyContact(email) {
     const myContact = this.allUsers.find(contact => {
       return contact.email.toLowerCase() === email;
     });
 
-    if (myContact === undefined) {
+    if (!myContact) {
       console.log('not found');
       return {};
     }
@@ -68,18 +72,16 @@ class Service {
   }
 
   fetchRecentChatContact() {
-    //    this.sleep(0.1);
     return this.allUsers.filter(user => {
       return !user.email.includes('linden');
     });
   }
 
   fetchNotifications() {
-    this.sleep(3);
     return [
       {
         contact: new Contact(
-          2,
+          'TomJerry@gmail.com',
           'Tom Jerry',
           'away',
           'https://www.kasandbox.org/programming-images/avatars/leafers-ultimate.png'
@@ -89,7 +91,7 @@ class Service {
 
       {
         contact: new Contact(
-          4,
+          'WinFred@hotmail.com',
           'Win Fred',
           'online',
           'https://flyingmeat.com/images/acorn_256x256.png'

@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const paths = require('./paths');
 const fs = require('fs');
+const constants = require('constants');
 
 class Auth {
   constructor() {
@@ -20,12 +21,18 @@ class Auth {
   }
 
   decrypt(textBase64) {
-    return crypto
-      .privateDecrypt(
-        { key: this.privateKey, passphrase: this.passphrase, },
-        Buffer.from(textBase64, 'base64')
-      )
-      .toString('utf8');
+    let text = undefined;
+    try {
+      text = crypto
+        .privateDecrypt(
+          { key: this.privateKey, },
+          Buffer.from(textBase64, 'base64')
+        )
+        .toString('utf8');
+      return text;
+    } catch (err) {
+      console.log(err.message);
+    }
   }
 }
 
