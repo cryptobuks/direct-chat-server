@@ -11,11 +11,15 @@
     "dev": "nodemon --inspect ./src/server"
   },
   "dependencies": {
+    "dotenv": "^6.2.0",
     "eslint": "^4.0.0",
     "eslint-plugin-prettier": "^2.0.0",
     "hapi": "^17.8.1",
     "inert": "^5.1.2",
     "nodemon": "^1.0.0",
-    "prettier-eslint": "^8.0.0"
+    "prettier": "^1.16.0",
+    "prettier-eslint": "^8.0.0",
+    "sequelize": "^4.42.0",
+    "sqlite3": "^4.0.6"
   }
 }

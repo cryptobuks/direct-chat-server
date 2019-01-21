@@ -1,5 +1,6 @@
 const auth = require('./auth');
 const Contact = require('./model/Contact');
+const db = require('./db/db');
 
 class Service {
   constructor() {

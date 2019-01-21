@@ -1,4 +1,5 @@
 'use strict';
+require('dotenv').config()
 
 const Hapi = require('hapi');
 const service = require('./service');
