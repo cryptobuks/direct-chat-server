@@ -1,5 +1,6 @@
 const Sequelize = require('sequelize');
 const paths = require('../paths');
+const uuid = require('uuid/v4');
 
 const sequelize = new Sequelize(
   'dc',
@@ -37,6 +38,11 @@ sequelize
 const User = sequelize.define(
   'user',
   {
+    id: {
+      primaryKey: true,
+      type: Sequelize.UUIDV4,
+      defaultValue: () => uuid()
+    },
     email: {
       type: Sequelize.STRING,
     },
@@ -54,22 +60,51 @@ const User = sequelize.define(
   },
   {
     indexes: [
-      // Create a unique index on email
       {
         unique: true,
-        fields: ['email',],
-      },
+        fields: ['id', 'email'],
+      }
     ],
   }
 );
 
-if (process.env.DB_RESET === 'true') {
-  // force: true will drop the table if it already exists
-  User.sync({ force: true, }).then(() => {
-    // Table created
-    return User.create({
-      email: 'hancock.ai@dc.com',
-      name: 'Hancock',
-    });
+const Contact = sequelize.define(
+  'contact',
+  {
+    id: {
+      primaryKey: true,
+      type: Sequelize.UUIDV4,
+      defaultValue: () => uuid()
+    },
+    user: {
+      primaryKey: true,
+      type: Sequelize.UUIDV4,
+      references: { model: "user", key: "id" },
+    },
+    contact: {
+      primaryKey: true,
+      type: Sequelize.UUIDV4,
+      references: { model: "user", key: "id" },
+    },
+  },
+  {
+    indexes: [
+      {
+        unique: true,
+        fields: ['id', 'user'],
+      }
+    ],
+  }
+);
+
+User.sync({ force: process.env.DB_RESET === 'true', }).then(() => {
+  // Table created
+  return User.create({
+    email: 'hancock.ai@dc.com',
+    name: 'Hancock',
+  }).catch(function (err) {
+    console.log(err.message)
   });
-}
+});
+
+Contact.sync({ force: process.env.DB_RESET === 'true', });
