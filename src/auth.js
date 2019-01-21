@@ -32,6 +32,7 @@ class Auth {
       return text;
     } catch (err) {
       console.log(err.message);
+      return undefined;
     }
   }
 }

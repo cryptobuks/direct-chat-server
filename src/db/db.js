@@ -45,9 +45,11 @@ const User = sequelize.define(
     },
     status: {
       type: Sequelize.STRING,
+      defaultValue: 'online'
     },
     image: {
       type: Sequelize.STRING,
+      defaultValue: 'default-avatar.svg'
     },
   },
   {
