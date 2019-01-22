@@ -11,6 +11,7 @@
     "dev": "nodemon --inspect ./src/server"
   },
   "dependencies": {
+    "axios": "^0.18.0",
     "dotenv": "^6.2.0",
     "eslint": "^4.0.0",
     "eslint-plugin-prettier": "^2.0.0",

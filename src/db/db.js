@@ -1,6 +1,7 @@
 const Sequelize = require('sequelize');
 const paths = require('../paths');
 const uuid = require('uuid/v4');
+const ai = require('../model/ai');
 
 const sequelize = new Sequelize(
   'dc',
@@ -41,7 +42,7 @@ const User = sequelize.define(
     id: {
       primaryKey: true,
       type: Sequelize.UUIDV4,
-      defaultValue: () => uuid()
+      defaultValue: () => uuid(),
     },
     email: {
       type: Sequelize.STRING,
@@ -51,19 +52,19 @@ const User = sequelize.define(
     },
     status: {
       type: Sequelize.STRING,
-      defaultValue: 'online'
+      defaultValue: 'online',
     },
     image: {
       type: Sequelize.STRING,
-      defaultValue: 'default-avatar.svg'
+      defaultValue: 'default-avatar.svg',
     },
   },
   {
     indexes: [
       {
         unique: true,
-        fields: ['id', 'email'],
-      }
+        fields: ['id', 'email',],
+      },
     ],
   }
 );
@@ -74,25 +75,25 @@ const Contact = sequelize.define(
     id: {
       primaryKey: true,
       type: Sequelize.UUIDV4,
-      defaultValue: () => uuid()
+      defaultValue: () => uuid(),
     },
     user: {
       primaryKey: true,
       type: Sequelize.UUIDV4,
-      references: { model: "user", key: "id" },
+      references: { model: 'user', key: 'id', },
     },
     contact: {
       primaryKey: true,
       type: Sequelize.UUIDV4,
-      references: { model: "user", key: "id" },
+      references: { model: 'user', key: 'id', },
     },
   },
   {
     indexes: [
       {
         unique: true,
-        fields: ['id', 'user'],
-      }
+        fields: ['id', 'user',],
+      },
     ],
   }
 );
@@ -100,11 +101,40 @@ const Contact = sequelize.define(
 User.sync({ force: process.env.DB_RESET === 'true', }).then(() => {
   // Table created
   return User.create({
-    email: 'hancock.ai@dc.com',
-    name: 'Hancock',
-  }).catch(function (err) {
-    console.log(err.message)
+    email: ai.email,
+    name: ai.name,
+    status: ai.status,
+    image: ai.image,
+  }).catch(function(err) {
+    console.log(err.message);
   });
 });
 
 Contact.sync({ force: process.env.DB_RESET === 'true', });
+
+findUserByEmail = async email => {
+  email = email.toLowerCase();
+  const user = await User.findOne({
+    where: {
+      email,
+    },
+  });
+
+  if (user) {
+    return addImagePrefix(user);
+  } else {
+    return null;
+  }
+};
+
+addImagePrefix = async contact => {
+  contact.image = `/assets/avatar/${contact.image}`;
+  delete contact.id;
+  return contact;
+};
+
+addUser = async contact => {
+  await User.create(contact);
+};
+
+module.exports = { findUserByEmail, addUser, };

@@ -1,5 +1,5 @@
 'use strict';
-require('dotenv').config()
+require('dotenv').config();
 
 const Hapi = require('hapi');
 const service = require('./service');
@@ -37,38 +37,44 @@ const start = async function() {
     server.route({
       method: 'POST',
       path: '/api/{method}',
-      handler: function(request, h) {
-        const email = service.auth(request.payload.token);
-        if (!email) {
-          return h.response().code(401);
-        }
-
-        const method = encodeURIComponent(request.params.method);
-        console.log('POST:' + method);
-
-        let data = null;
+      handler: async function(request, h) {
+        let data = {};
         let code = 200;
-        switch (method) {
-          case 'fetchAllContact':
-            data = service.fetchAllContact();
-            break;
-          case 'fetchRecentChatContact':
-            data = service.fetchRecentChatContact();
-            break;
-          case 'fetchNotifications':
-            data = service.fetchNotifications();
-            break;
-          case 'fetchMyContact':
-            data = service.fetchMyContact(email);
-            break;
-          case 'createNewUser':
-            try {
-              [data, code,] = service.createNewUser(request.payload);
-            } catch (error) {
-              console.error(error);
-              code = 500;
-            }
-            break;
+        try {
+          const email = service.auth(request.payload.token);
+          if (!email) {
+            return h.response().code(401);
+          }
+
+          const method = encodeURIComponent(request.params.method);
+          console.log('POST:' + method);
+
+          switch (method) {
+            case 'fetchAllContact':
+              data = await service.fetchAllContact();
+              break;
+            case 'fetchRecentChatContact':
+              data = await service.fetchRecentChatContact();
+              break;
+            case 'fetchNotifications':
+              data = await service.fetchNotifications();
+              break;
+            case 'fetchMyContact':
+              data = await service.fetchMyContact(email);
+              break;
+            case 'createNewUser':
+              try {
+                [data, code,] = await service.createNewUser(request.payload);
+              } catch (error) {
+                console.error(error);
+                code = 500;
+              }
+              break;
+            default:
+              code = 400;
+          }
+        } catch (error) {
+          console.log(error);
         }
 
         return h.response(data).code(code);

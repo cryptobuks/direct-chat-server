@@ -1,17 +1,18 @@
 const auth = require('./auth');
 const Contact = require('./model/Contact');
 const db = require('./db/db');
+const fs = require('fs');
+const request = require('request');
+const uuid = require('uuid/v4');
+const paths = require('./paths');
+const path = require('path');
+const Axios = require('axios');
 
 class Service {
   constructor() {
     this.botAvatar = '/assets/img/bot.gif';
     this.defaultAvatar = '/assets/img/default-avatar.svg';
     this.allUsers = this.getAllUsers();
-  }
-
-  sleep(seconds = 1) {
-    let waitTill = new Date(new Date().getTime() + seconds * 1000);
-    while (waitTill > new Date()) {}
   }
 
   auth(token) {
@@ -43,42 +44,62 @@ class Service {
     ];
   }
 
-  createNewUser(user) {
+  async downloadImage(imageUrl, email) {
+    const url = imageUrl;
+    const response = await Axios({
+      url,
+      method: 'GET',
+      responseType: 'stream',
+    });
+
+    const name = email.replace('@', 'at');
+    const writer = fs.createWriteStream(path.resolve(paths.avatar, name));
+    response.data.pipe(writer);
+
+    return new Promise((resolve, reject) => {
+      writer.on('finish', () => resolve(name));
+      writer.on('error', reject);
+    });
+  }
+
+  async createNewUser(user) {
     if (user.email && user.name && user.image) {
-      const contact = new Contact(user.email, user.name, 'online', user.image);
-      this.allUsers.push(contact);
-      console.log(this.allUsers);
-      return [undefined, 201,];
+      console.log(`user.image:${user.image}`);
+      const urlReg = /https?:\/\/.*\.(jpg|gif|jpeg|svg|bmp)?.*/gi;
+      const match = urlReg.exec(user.image);
+
+      if (match) {
+        const imageName = await this.downloadImage(user.image, user.email);
+        const contact = new Contact(user.email, user.name, 'online', imageName);
+        await db.addUser(contact);
+        return [undefined, 201,];
+      }
     }
 
     return [undefined, 400,];
   }
 
-  fetchMyContact(email) {
-    const myContact = this.allUsers.find(contact => {
-      return contact.email.toLowerCase() === email;
-    });
+  async fetchMyContact(email) {
+    const myContact = await db.findUserByEmail(email);
 
-    if (!myContact) {
-      console.log('not found');
-      return {};
+    if (myContact) {
+      console.log('found');
+      return myContact;
     }
-    console.log('found');
-    return myContact;
+
+    console.log('Not Found:' + email);
+    return {};
   }
 
-  fetchAllContact() {
-    this.sleep(0.1);
+  async fetchAllContact() {
     return this.fetchRecentChatContact();
   }
 
-  fetchRecentChatContact() {
-    return this.allUsers.filter(user => {
-      return !user.email.includes('linden');
-    });
+  async fetchRecentChatContact() {
+    return this.allUsers;
   }
 
-  fetchNotifications() {
+  async fetchNotifications() {
     return [
       {
         contact: new Contact(
