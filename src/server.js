@@ -41,8 +41,8 @@ const start = async function() {
         let data = {};
         let code = 200;
         try {
-          const email = service.auth(request.payload.token);
-          if (!email) {
+          const payload = request.payload;
+          if (!service.auth(payload.email, payload.token)) {
             return h.response().code(401);
           }
 
@@ -60,11 +60,11 @@ const start = async function() {
               data = await service.fetchNotifications();
               break;
             case 'fetchMyContact':
-              data = await service.fetchMyContact(email);
+              data = await service.fetchMyContact(payload.email);
               break;
             case 'createNewUser':
               try {
-                [data, code,] = await service.createNewUser(request.payload);
+                [data, code,] = await service.createNewUser(payload);
               } catch (error) {
                 console.error(error);
                 code = 500;
@@ -75,8 +75,38 @@ const start = async function() {
           }
         } catch (error) {
           console.log(error);
+          code = 500;
         }
 
+        return h.response(data).code(code);
+      },
+    });
+
+    server.route({
+      method: 'POST',
+      path: '/api/fb/{method}',
+      handler: async function(request, h) {
+        let data = {};
+        let code = 200;
+        try {
+          const method = encodeURIComponent(request.params.method);
+          console.log('POST:' + method);
+
+          switch (method) {
+            case 'createUser':
+              [data, code,] = await service.creatUserWithFbToken(
+                request.payload
+              );
+              break;
+            default:
+              code = 400;
+          }
+        } catch (error) {
+          console.log(error);
+          code = 500;
+        }
+
+        console.log(`data:${JSON.stringify(data)}`);
         return h.response(data).code(code);
       },
     });

@@ -121,16 +121,10 @@ findUserByEmail = async email => {
   });
 
   if (user) {
-    return addImagePrefix(user);
+    return user;
   } else {
     return null;
   }
-};
-
-addImagePrefix = async contact => {
-  contact.image = `/assets/avatar/${contact.image}`;
-  delete contact.id;
-  return contact;
 };
 
 addUser = async contact => {
