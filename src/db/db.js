@@ -118,6 +118,7 @@ findUserByEmail = async email => {
     where: {
       email,
     },
+    raw: true,
   });
 
   if (user) {

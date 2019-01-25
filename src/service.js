@@ -1,9 +1,11 @@
-//const auth = require('./auth');
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const Contact = require('./model/Contact');
 const db = require('./db/db');
 const request = require('request');
 const uuid = require('uuid/v4');
 const api = require('./utils/api');
+const { OAuth2Client, } = require('google-auth-library');
+const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 class Service {
   constructor() {
@@ -114,6 +116,23 @@ class Service {
     }
 
     console.log(`Cannot find user ${profile.email}`);
+    return await this.createNewUser(profile);
+  }
+
+  async creatUserWithGoogleToken(token) {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: token,
+      audience: GOOGLE_CLIENT_ID,
+    });
+    const profile = ticket.getPayload();
+    console.log(profile);
+    const user = await db.findUserByEmail(profile.email);
+    if (user) {
+      return [this.convertToClientUser(user), 201,];
+    }
+
+    console.log(`Cannot find user ${profile.email}`);
+    profile.image = profile.picture;
     return await this.createNewUser(profile);
   }
 

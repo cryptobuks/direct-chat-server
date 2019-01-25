@@ -111,6 +111,35 @@ const start = async function() {
       },
     });
 
+    server.route({
+      method: 'POST',
+      path: '/api/google/{method}',
+      handler: async function(request, h) {
+        let data = {};
+        let code = 200;
+        try {
+          const method = encodeURIComponent(request.params.method);
+          console.log('POST:' + method);
+
+          switch (method) {
+            case 'createUser':
+              [data, code,] = await service.creatUserWithGoogleToken(
+                request.payload
+              );
+              break;
+            default:
+              code = 400;
+          }
+        } catch (error) {
+          console.log(error);
+          code = 500;
+        }
+
+        console.log(`data:${JSON.stringify(data)}`);
+        return h.response(data).code(code);
+      },
+    });
+
     await server.start();
   } catch (err) {
     console.log(err);
