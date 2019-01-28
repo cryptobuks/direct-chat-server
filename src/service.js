@@ -1,18 +1,18 @@
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const Contact = require('./model/Contact');
-const db = require('./db/db');
 const request = require('request');
 const uuid = require('uuid/v4');
 const api = require('./utils/api');
 const { OAuth2Client, } = require('google-auth-library');
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
+const ai = require('./model/ai');
+const db = require('./db/dbApi');
 
 class Service {
   constructor() {
     this.tokenExpireIn = process.env.TOKEN_EXPIRE_IN;
     this.botAvatar = '/assets/img/bot.gif';
     this.defaultAvatar = '/assets/img/default-avatar.svg';
-    this.allUsers = this.getAllUsers();
     this.authTable = {};
   }
 
@@ -32,31 +32,13 @@ class Service {
     };
   }
 
-  getAllUsers() {
-    return [
-      new Contact('AI-Bot@directChat.com', 'AI-Bot', 'online', this.botAvatar),
-      new Contact(
-        'JimKarry@gmail.com',
-        'Jim Karry',
-        'online',
-        'https://s3.amazonaws.com/pix.iemoji.com/images/emoji/apple/ios-11/256/thinking-face.png'
-      ),
-      new Contact(
-        'WinFred@hotmail.com',
-        'Win Fred',
-        'online',
-        'https://flyingmeat.com/images/acorn_256x256.png'
-      ),
-      new Contact(
-        'TomJerry@gmail.com',
-        'Tom Jerry',
-        'away',
-        'https://www.kasandbox.org/programming-images/avatars/leafers-ultimate.png'
-      ),
-    ];
+  expendImageUrl(user) {
+    user = Object.assign({}, user);
+    user.image = `/assets/avatar/${user.image}`;
+    return user;
   }
 
-  convertToClientUser(user) {
+  addToken(user) {
     delete user.id;
     delete user.status;
     user.image = `/assets/avatar/${user.image}`;
@@ -79,7 +61,7 @@ class Service {
         const newUser = new Contact(user.email, user.name, 'online', imageName);
         await db.addUser(newUser);
         console.log(`new user [${newUser.email}]is created`);
-        return [this.convertToClientUser(newUser), 201,];
+        return [this.addToken(newUser), 201,];
       }
     }
 
@@ -92,19 +74,32 @@ class Service {
 
     if (myContact) {
       console.log('found');
-      return this.convertToClientUser(myContact);
+      return this.addToken(myContact);
     }
 
     console.log('Not Found:' + email);
     return {};
   }
 
-  async fetchAllContact() {
-    return this.fetchRecentChatContact();
+  async fetchAllContact(email) {
+    console.log('----- fetchAllContact');
+    let contacts = await db.getContacts(email);
+    if (!contacts) {
+      contacts = [];
+    }
+
+    contacts.unshift(ai);
+    console.log(contacts);
+    return contacts.map(contact => this.expendImageUrl(contact));
   }
 
-  async fetchRecentChatContact() {
-    return this.allUsers;
+  async fetchRecentChatContact(email) {
+    let contacts = await db.getRecentContacts(email);
+    if (!contacts) {
+      contacts = [];
+    }
+
+    return contacts.map(contact => this.expendImageUrl(contact));
   }
 
   async creatUserWithFbToken(token) {
@@ -112,7 +107,7 @@ class Service {
     console.log(`FB profile: ${JSON.stringify(profile)}`);
     const user = await db.findUserByEmail(profile.email);
     if (user) {
-      return [this.convertToClientUser(user), 201,];
+      return [this.addToken(user), 201,];
     }
 
     console.log(`Cannot find user ${profile.email}`);
@@ -128,7 +123,7 @@ class Service {
     console.log(profile);
     const user = await db.findUserByEmail(profile.email);
     if (user) {
-      return [this.convertToClientUser(user), 201,];
+      return [this.addToken(user), 201,];
     }
 
     console.log(`Cannot find user ${profile.email}`);
@@ -136,7 +131,7 @@ class Service {
     return await this.createNewUser(profile);
   }
 
-  async fetchNotifications() {
+  async fetchNotifications(email) {
     return [
       {
         contact: new Contact(

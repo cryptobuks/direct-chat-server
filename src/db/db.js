@@ -39,12 +39,8 @@ sequelize
 const User = sequelize.define(
   'user',
   {
-    id: {
-      primaryKey: true,
-      type: Sequelize.UUIDV4,
-      defaultValue: () => uuid(),
-    },
     email: {
+      primaryKey: true,
       type: Sequelize.STRING,
     },
     name: {
@@ -63,36 +59,7 @@ const User = sequelize.define(
     indexes: [
       {
         unique: true,
-        fields: ['id', 'email',],
-      },
-    ],
-  }
-);
-
-const Contact = sequelize.define(
-  'contact',
-  {
-    id: {
-      primaryKey: true,
-      type: Sequelize.UUIDV4,
-      defaultValue: () => uuid(),
-    },
-    user: {
-      primaryKey: true,
-      type: Sequelize.UUIDV4,
-      references: { model: 'user', key: 'id', },
-    },
-    contact: {
-      primaryKey: true,
-      type: Sequelize.UUIDV4,
-      references: { model: 'user', key: 'id', },
-    },
-  },
-  {
-    indexes: [
-      {
-        unique: true,
-        fields: ['id', 'user',],
+        fields: ['email',],
       },
     ],
   }
@@ -110,26 +77,54 @@ User.sync({ force: process.env.DB_RESET === 'true', }).then(() => {
   });
 });
 
+const Contact = sequelize.define(
+  'contact',
+  {
+    id: {
+      primaryKey: true,
+      type: Sequelize.UUIDV4,
+      defaultValue: () => uuid(),
+    },
+  },
+  {
+    indexes: [
+      {
+        unique: true,
+        fields: ['id',],
+      },
+    ],
+  }
+);
+
+Contact.belongsTo(User, { foreignKey: { name: 'contact', }, });
+Contact.belongsTo(User, { foreignKey: { name: 'me', }, });
 Contact.sync({ force: process.env.DB_RESET === 'true', });
 
-findUserByEmail = async email => {
-  email = email.toLowerCase();
-  const user = await User.findOne({
-    where: {
-      email,
+const Recent = sequelize.define(
+  'recent',
+  {
+    id: {
+      primaryKey: true,
+      type: Sequelize.UUIDV4,
+      defaultValue: () => uuid(),
     },
-    raw: true,
-  });
-
-  if (user) {
-    return user;
-  } else {
-    return null;
+    time: {
+      type: Sequelize.BIGINT,
+      references: { model: 'user', key: 'email', },
+    },
+  },
+  {
+    indexes: [
+      {
+        unique: true,
+        fields: ['id',],
+      },
+    ],
   }
-};
+);
 
-addUser = async contact => {
-  await User.create(contact);
-};
+Recent.belongsTo(User, { foreignKey: { name: 'contact', }, });
+Recent.belongsTo(User, { foreignKey: { name: 'me', }, });
+Recent.sync({ force: process.env.DB_RESET === 'true', });
 
-module.exports = { findUserByEmail, addUser, };
+module.exports = { User, Contact, Recent, };

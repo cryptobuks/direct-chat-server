@@ -4,6 +4,7 @@ require('dotenv').config();
 const Hapi = require('hapi');
 const service = require('./service');
 const Inert = require('inert');
+const db = require('./db/db');
 const test = require('./test');
 
 // Create a server with a host and port
@@ -51,13 +52,13 @@ const start = async function() {
 
           switch (method) {
             case 'fetchAllContact':
-              data = await service.fetchAllContact();
+              data = await service.fetchAllContact(payload.email);
               break;
             case 'fetchRecentChatContact':
-              data = await service.fetchRecentChatContact();
+              data = await service.fetchRecentChatContact(payload.email);
               break;
             case 'fetchNotifications':
-              data = await service.fetchNotifications();
+              data = await service.fetchNotifications(payload.email);
               break;
             case 'fetchMyContact':
               data = await service.fetchMyContact(payload.email);
