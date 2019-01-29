@@ -6,6 +6,7 @@ const api = require('./utils/api');
 const { OAuth2Client, } = require('google-auth-library');
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 const ai = require('./model/ai');
+const defaultUser = require('./model/defaultUser');
 const db = require('./db/dbApi');
 
 class Service {
@@ -49,20 +50,53 @@ class Service {
     return user;
   }
 
+  async signup(email, pw) {
+    const user = Object.assign({}, defaultUser);
+    user.email = email;
+    user.name = email.split('@')[0];
+    user.pw = pw;
+    return await this.createNewUser(user);
+  }
+
+  async signin(email, pw) {
+    const user = await db.findUserByEmailPw(email, pw);
+
+    if (user) {
+      console.log('found');
+      return [this.addToken(user), 200,];
+    }
+
+    console.log('Not Found:' + email);
+    return [{}, 401,];
+  }
+
   async createNewUser(user) {
     console.log('method:createNewUser');
     if (user.email && user.name && user.image) {
-      console.log(`user.image:${user.image}`);
       const urlReg = /https?:\/\/.*\.(jpg|gif|jpeg|svg|bmp)?.*/gi;
       const match = urlReg.exec(user.image);
-
       if (match) {
-        const imageName = await api.downloadImage(user.image, user.email);
-        const newUser = new Contact(user.email, user.name, 'online', imageName);
-        await db.addUser(newUser);
-        console.log(`new user [${newUser.email}]is created`);
-        return [this.addToken(newUser), 201,];
+        user.image = await api.downloadImage(user.image, user.email);
       }
+
+      const newUser = new Contact(
+        user.email,
+        user.name,
+        'online',
+        user.image,
+        user.pw
+      );
+
+      try {
+        await db.addUser(newUser);
+      } catch (error) {
+        console.log(error.name);
+        if (error.name === 'SequelizeUniqueConstraintError') {
+          return [{}, 403,];
+        }
+      }
+      console.log(`new user [${newUser.email}]is created`);
+      return [this.addToken(newUser), 201,];
     }
 
     console.log(`Failed to create user:${JSON.stringify(user)}`);

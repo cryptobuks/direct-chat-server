@@ -11,6 +11,17 @@ findUserByEmail = async email => {
   });
 };
 
+findUserByEmailPw = async (email, pw) => {
+  email = email.toLowerCase();
+  return await db.User.findOne({
+    where: {
+      email,
+      pw,
+    },
+    raw: true,
+  });
+};
+
 convertContact = contact =>
   new Contact(
     contact['user.email'],
@@ -49,4 +60,10 @@ getRecentContacts = async email => {
   return contacts.map(convertContact);
 };
 
-module.exports = { findUserByEmail, addUser, getContacts, getRecentContacts, };
+module.exports = {
+  findUserByEmail,
+  findUserByEmailPw,
+  addUser,
+  getContacts,
+  getRecentContacts,
+};

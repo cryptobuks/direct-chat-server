@@ -54,6 +54,9 @@ const User = sequelize.define(
       type: Sequelize.STRING,
       defaultValue: 'default-avatar.svg',
     },
+    pw: {
+      type: Sequelize.STRING,
+    },
   },
   {
     indexes: [
@@ -66,7 +69,6 @@ const User = sequelize.define(
 );
 
 User.sync({ force: process.env.DB_RESET === 'true', }).then(() => {
-  // Table created
   return User.create({
     email: ai.email,
     name: ai.name,

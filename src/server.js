@@ -64,12 +64,7 @@ const start = async function() {
               data = await service.fetchMyContact(payload.email);
               break;
             case 'createNewUser':
-              try {
-                [data, code,] = await service.createNewUser(payload);
-              } catch (error) {
-                console.error(error);
-                code = 500;
-              }
+              [data, code,] = await service.createNewUser(payload);
               break;
             default:
               code = 400;
@@ -85,48 +80,27 @@ const start = async function() {
 
     server.route({
       method: 'POST',
-      path: '/api/fb/{method}',
+      path: '/api/tokenfree/{method}',
       handler: async function(request, h) {
         let data = {};
         let code = 200;
         try {
           const method = encodeURIComponent(request.params.method);
+          const payload = request.payload;
           console.log('POST:' + method);
 
           switch (method) {
-            case 'createUser':
-              [data, code,] = await service.creatUserWithFbToken(
-                request.payload
-              );
+            case 'fbCreateUser':
+              [data, code,] = await service.creatUserWithFbToken(payload);
               break;
-            default:
-              code = 400;
-          }
-        } catch (error) {
-          console.log(error);
-          code = 500;
-        }
-
-        console.log(`data:${JSON.stringify(data)}`);
-        return h.response(data).code(code);
-      },
-    });
-
-    server.route({
-      method: 'POST',
-      path: '/api/google/{method}',
-      handler: async function(request, h) {
-        let data = {};
-        let code = 200;
-        try {
-          const method = encodeURIComponent(request.params.method);
-          console.log('POST:' + method);
-
-          switch (method) {
-            case 'createUser':
-              [data, code,] = await service.creatUserWithGoogleToken(
-                request.payload
-              );
+            case 'googleCreateUser':
+              [data, code,] = await service.creatUserWithGoogleToken(payload);
+              break;
+            case 'signup':
+              [data, code,] = await service.signup(payload.email, payload.pw);
+              break;
+            case 'signin':
+              [data, code,] = await service.signin(payload.email, payload.pw);
               break;
             default:
               code = 400;
