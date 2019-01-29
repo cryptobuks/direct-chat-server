@@ -34,7 +34,6 @@ class Service {
   }
 
   expendImageUrl(user) {
-    user = Object.assign({}, user);
     user.image = `/assets/avatar/${user.image}`;
     return user;
   }
@@ -59,7 +58,7 @@ class Service {
   }
 
   async signin(email, pw) {
-    const user = await db.findUserByEmailPw(email, pw);
+    const user = await db.getUserByEmailPw(email, pw);
 
     if (user) {
       console.log('found');
@@ -68,6 +67,10 @@ class Service {
 
     console.log('Not Found:' + email);
     return [{}, 401,];
+  }
+
+  async addContact(user, contact) {
+    await db.addContact(user, contact);
   }
 
   async createNewUser(user) {
@@ -96,6 +99,7 @@ class Service {
         }
       }
       console.log(`new user [${newUser.email}]is created`);
+      this.addContact(newUser, ai);
       return [this.addToken(newUser), 201,];
     }
 
@@ -104,7 +108,7 @@ class Service {
   }
 
   async fetchMyContact(email) {
-    const myContact = await db.findUserByEmail(email);
+    const myContact = await db.getUserByEmail(email);
 
     if (myContact) {
       console.log('found');
@@ -121,9 +125,11 @@ class Service {
     if (!contacts) {
       contacts = [];
     }
-
-    contacts.unshift(ai);
-    console.log(contacts);
+    const originalLenght = contacts.length;
+    contacts = contacts.filter(contact => contact.email != ai.email);
+    if (contacts.length != originalLenght) {
+      contacts.unshift(ai);
+    }
     return contacts.map(contact => this.expendImageUrl(contact));
   }
 
@@ -139,7 +145,7 @@ class Service {
   async creatUserWithFbToken(token) {
     const profile = await api.fetchFbProfile(token);
     console.log(`FB profile: ${JSON.stringify(profile)}`);
-    const user = await db.findUserByEmail(profile.email);
+    const user = await db.getUserByEmail(profile.email);
     if (user) {
       return [this.addToken(user), 201,];
     }
@@ -155,7 +161,7 @@ class Service {
     });
     const profile = ticket.getPayload();
     console.log(profile);
-    const user = await db.findUserByEmail(profile.email);
+    const user = await db.getUserByEmail(profile.email);
     if (user) {
       return [this.addToken(user), 201,];
     }

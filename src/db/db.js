@@ -112,7 +112,6 @@ const Recent = sequelize.define(
     },
     time: {
       type: Sequelize.BIGINT,
-      references: { model: 'user', key: 'email', },
     },
   },
   {
