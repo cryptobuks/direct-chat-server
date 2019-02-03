@@ -34,7 +34,10 @@ class Service {
   }
 
   expendImageUrl(user) {
-    user.image = `/assets/avatar/${user.image}`;
+    if(!user.fullImageUri) {
+      user.image = `/assets/avatar/${user.image}`;
+      user.fullImageUri = true;
+    }
     return user;
   }
 
