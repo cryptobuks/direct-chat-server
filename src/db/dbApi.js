@@ -32,6 +32,13 @@ addContact = async (user, contact) => {
   await db.Contact.create({ me: user.email, contact: contact.email, });
 };
 
+getAllContacts = async () => {
+  return await db.User.findAll({
+    attributes: ['email', 'name', 'status', 'image',],
+    raw: true,
+  });
+};
+
 getContacts = async email => {
   console.log('dbApi:getContacts');
 
@@ -88,6 +95,7 @@ module.exports = {
   getUserByEmailPw,
   addUser,
   getContacts,
+  getAllContacts,
   getRecentContacts,
   addContact,
 };

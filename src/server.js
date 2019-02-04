@@ -54,6 +54,12 @@ const start = async function() {
             case 'fetchAllContact':
               data = await service.fetchAllContact(payload.email);
               break;
+            case 'fetchContactsWithKeywords':
+              data = await service.fetchContactsWithKeywords(
+                payload.keyword,
+                payload.email
+              );
+              break;
             case 'fetchRecentChatContact':
               data = await service.fetchRecentChatContact(payload.email);
               break;

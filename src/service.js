@@ -34,7 +34,7 @@ class Service {
   }
 
   expendImageUrl(user) {
-    if(!user.fullImageUri) {
+    if (!user.fullImageUri) {
       user.image = `/assets/avatar/${user.image}`;
       user.fullImageUri = true;
     }
@@ -133,6 +133,22 @@ class Service {
     if (contacts.length != originalLenght) {
       contacts.unshift(ai);
     }
+    return contacts.map(contact => this.expendImageUrl(contact));
+  }
+
+  async fetchContactsWithKeywords(keyword, email) {
+    let contacts = await db.getAllContacts();
+
+    if (!contacts) {
+      contacts = [];
+    }
+    contacts = contacts.filter(
+      contact =>
+        contact.email != ai.email &&
+        contact.email != email &&
+        contact.name.toLowerCase().includes(keyword.toLowerCase())
+    );
+
     return contacts.map(contact => this.expendImageUrl(contact));
   }
 
