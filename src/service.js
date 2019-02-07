@@ -138,18 +138,29 @@ class Service {
 
   async fetchContactsWithKeywords(keyword, email) {
     let contacts = await db.getAllContacts();
+    let allMyContacts = await this.fetchAllContact(email);
+    allMyContacts = allMyContacts.map(contact => contact.email);
+    let notificationContacts = await db.getNotifications(email);
 
-    if (!contacts) {
-      contacts = [];
-    }
     contacts = contacts.filter(
       contact =>
-        contact.email != ai.email &&
-        contact.email != email &&
+        contact.email !== ai.email &&
+        contact.email !== email &&
+        !allMyContacts.includes(contact.email) &&
         contact.name.toLowerCase().includes(keyword.toLowerCase())
     );
 
-    return contacts.map(contact => this.expendImageUrl(contact));
+    return contacts.map(contact => {
+      let notificationContact = notificationContacts.filter(
+        c => c.email === contact.email
+      )[0];
+      if (notificationContact) {
+        contact.type = notificationContact.type;
+      } else {
+        contact.type = 'stranger';
+      }
+      return this.expendImageUrl(contact);
+    });
   }
 
   async fetchRecentChatContact(email) {
@@ -191,27 +202,23 @@ class Service {
   }
 
   async fetchNotifications(email) {
-    return [
-      {
-        contact: new Contact(
-          'TomJerry@gmail.com',
-          'Tom Jerry',
-          'away',
-          'https://www.kasandbox.org/programming-images/avatars/leafers-ultimate.png'
-        ),
-        type: 'friend-request',
-      },
+    const notifications = await db.getNotifications(email);
+    return notifications.map(notification => this.expendImageUrl(notification));
+  }
 
-      {
-        contact: new Contact(
-          'WinFred@hotmail.com',
-          'Win Fred',
-          'online',
-          'https://flyingmeat.com/images/acorn_256x256.png'
-        ),
-        type: 'friend-request-declined',
-      },
-    ];
+  async sendFriendRequest(email, contactEmail) {
+    console.log(email + ',' + contactEmail);
+    let notifications = await this.fetchNotifications(contactEmail);
+    let notification = notifications.filter(n => n.email === email)[0];
+    if (notification && notification.type === 'sentFriendRequest') {
+      await db.removeNotification(email, contactEmail);
+      await db.removeNotification(contactEmail, email);
+      await db.addContact({ email, }, { email: contactEmail, });
+      await db.addContact({ email: contactEmail, }, { email, });
+    } else {
+      await db.addNotification(email, contactEmail, 'sentFriendRequest');
+      await db.addNotification(contactEmail, email, 'receivedFriendRequest');
+    }
   }
 }
 

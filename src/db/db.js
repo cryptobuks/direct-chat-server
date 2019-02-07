@@ -128,4 +128,30 @@ Recent.belongsTo(User, { foreignKey: { name: 'contact', }, });
 Recent.belongsTo(User, { foreignKey: { name: 'me', }, });
 Recent.sync({ force: process.env.DB_RESET === 'true', });
 
-module.exports = { User, Contact, Recent, };
+const Notification = sequelize.define(
+  'notification',
+  {
+    id: {
+      primaryKey: true,
+      type: Sequelize.UUIDV4,
+      defaultValue: () => uuid(),
+    },
+    type: {
+      type: Sequelize.STRING,
+    },
+  },
+  {
+    indexes: [
+      {
+        unique: true,
+        fields: ['id',],
+      },
+    ],
+  }
+);
+
+Notification.belongsTo(User, { foreignKey: { name: 'me', }, });
+Notification.belongsTo(User, { foreignKey: { name: 'contact', }, });
+Notification.sync({ force: process.env.DB_RESET === 'true', });
+
+module.exports = { User, Contact, Recent, Notification, };

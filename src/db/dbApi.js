@@ -32,11 +32,58 @@ addContact = async (user, contact) => {
   await db.Contact.create({ me: user.email, contact: contact.email, });
 };
 
+addNotification = async (myEmail, contactEmail, type) => {
+  await removeNotification(myEmail, contactEmail);
+  await db.Notification.create({
+    me: myEmail,
+    contact: contactEmail,
+    type,
+  });
+};
+
+removeNotification = async (myEmail, contactEmail) => {
+  await db.Notification.destroy({
+    where: {
+      me: myEmail,
+      contact: contactEmail,
+    },
+  });
+};
+
 getAllContacts = async () => {
   return await db.User.findAll({
     attributes: ['email', 'name', 'status', 'image',],
     raw: true,
   });
+};
+
+getNotifications = async email => {
+  const notifications = await db.Notification.findAll({
+    attributes: ['contact', 'type',],
+    where: {
+      me: email,
+    },
+    raw: true,
+  });
+
+  if (notifications.length === 0) {
+    return [];
+  }
+
+  const contacts = [];
+  for (let [key, notification,] of Object.entries(notifications)) {
+    let contact = await db.User.findOne({
+      attributes: ['email', 'name', 'status', 'image',],
+      where: {
+        email: notification.contact,
+      },
+      raw: true,
+    });
+    contact.type = notification.type;
+    contacts.push(contact);
+  }
+
+  return contacts;
 };
 
 getContacts = async email => {
@@ -98,4 +145,7 @@ module.exports = {
   getAllContacts,
   getRecentContacts,
   addContact,
+  addNotification,
+  removeNotification,
+  getNotifications,
 };

@@ -66,6 +66,9 @@ const start = async function() {
             case 'fetchNotifications':
               data = await service.fetchNotifications(payload.email);
               break;
+            case 'sendFriendRequest':
+              await service.sendFriendRequest(payload.email, payload.contact);
+              break;
             case 'fetchMyContact':
               data = await service.fetchMyContact(payload.email);
               break;
